@@ -1,6 +1,5 @@
 torch
 numpy
-matplotlib
 imageio
 scipy
 opencv-python
