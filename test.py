@@ -12,9 +12,8 @@ y = flipx(x)
 flipy = FlipY(x.size())
 y = flipy(x)
 
-rotate = Rotate90()
+rotate = Rotate90(x.size())
 y = rotate(x)
-imageio.imwrite('elaine_rot.png', y[0, 0, ...].cpu().numpy())
 
 noise = AddNoise(sigma_min=20, sigma_max=20)
 y = noise(x)

@@ -186,12 +186,29 @@ class FlipY(object):
 
 class Rotate90(object):
 
-    def __init__(self, prob=1):
+    def __init__(self, shape, prob=1, cuda=True):
         """
         Rotate the inputs by 90 degree angles
         :param prob: probability of rotating
         """
+        self.shape = shape
         self.prob = prob
+        self.cuda = cuda
+
+        i = np.linspace(-1, 1, shape[2])
+        j = np.linspace(-1, 1, shape[3])
+        grids = []
+        for m in range(4):
+            xv, yv = np.meshgrid(i, j)
+            xv = np.rot90(xv, m+1).copy()
+            yv = np.rot90(yv, m+1).copy()
+
+            grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
+            grid = grid.unsqueeze(0).repeat_interleave(shape[0], dim=0)
+            if cuda:
+                grid = grid.cuda()
+            grids.append(grid)
+        self.grids = grids
 
     def __call__(self, x):
         """
@@ -201,11 +218,7 @@ class Rotate90(object):
         """
 
         if rnd.rand() < self.prob:
-            k = rnd.randint(1, 4)
-            for kk in range(k):
-                x = x.transpose(2, 3)
-
-            return x
+            return F.grid_sample(x, self.grids[rnd.randint(0, 4)])
         else:
             return x
 
