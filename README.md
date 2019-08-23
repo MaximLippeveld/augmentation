@@ -1,6 +1,6 @@
 # GPU accelerated data augmentation
 
-This code is an extension on the [imgaug](https://github.com/aleju/imgaug) package that provides flexible use of data augmentation. In particular, we provide standard augmentation strategies on the GPU, as some of these can be intensive on the CPU. Our GPU translation is based on [PyTorch](https://pytorch.org/). The current version is designed for 2D augmentation, however 3D augmentation is coming soon! 
+This code is an extension on the [imgaug](https://github.com/aleju/imgaug) package that provides flexible use of data augmentation. In particular, we provide standard augmentation strategies on the GPU, as some of these can be intensive on the CPU. Our GPU translation is based on [PyTorch](https://pytorch.org/). The current version supports both 2D and 3D data augmentation, however the 3D augmentation is still in test phase. 
 
 ## Installation
 Install the dependencies and you are ready to go! 
@@ -10,7 +10,7 @@ Install the dependencies and you are ready to go!
 Import the required modules:
 <pre><code>import imageio
 import torch
-from augmentation import FlipX, FlipY, Rotate90, AddNoise, RandomDeformation</code></pre>
+from augmentation_2d import FlipX, FlipY, Rotate90, AddNoise, RandomDeformation</code></pre>
 
 Read an image into a tensor and transfer it to the GPU:
 <pre><code>x = imageio.imread('img/elaine.png').astype('float')
