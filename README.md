@@ -10,7 +10,7 @@ Install the dependencies and you are ready to go!
 Import the required modules:
 <pre><code>import imageio
 import torch
-from augmentation import FlipX, FlipY, Rotate90, AddNoise, RandomDeformation</code></pre>
+from augmentation_2d import FlipX, FlipY, Rotate90, AddNoise, RandomDeformation</code></pre>
 
 Read an image into a tensor and transfer it to the GPU:
 <pre><code>x = imageio.imread('img/elaine.png').astype('float')
