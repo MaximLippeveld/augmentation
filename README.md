@@ -21,8 +21,8 @@ Flip the image along the x and y-axis:
 y = flipx(x)
 flipy = FlipY(x.size())
 y = flipy(x)</code></pre>
-![Flip along the x-axis][img/elaine_flipx.png]
-![Flip along the y-axis][img/elaine_flipy.png]
+<img src="https://github.com/JorisRoels/augmentation/blob/master/img/elaine_flipx.png">
+<img src="https://github.com/JorisRoels/augmentation/blob/master/img/elaine_flipy.png">
 
 Rotate the image 90 degrees: 
 <pre><code>rotate = Rotate90()
