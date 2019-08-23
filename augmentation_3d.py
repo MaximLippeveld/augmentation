@@ -72,18 +72,20 @@ class AddChannelAxis(object):
 
 class AddNoise(object):
 
-    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False):
+    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False, include_weak_segmentation=False):
         """
         Adds noise to the input
         :param prob: probability of adding noise
         :param sigma_min: minimum noise standard deviation
         :param sigma_max: maximum noise standard deviation
         :param include_segmentation: 2nd half of the batch will not be augmented as this is assumed to be a segmentation
+        :param include_weak_segmentation: last 2/3 of the batch will not be augmented as this is assumed to be weak segmentation labels
         """
         self.prob = prob
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
         self.include_segmentation = include_segmentation
+        self.include_weak_segmentation = include_weak_segmentation
 
     def __call__(self, x):
         """
@@ -99,6 +101,11 @@ class AddNoise(object):
                 sz[0] = sz[0] // 2
                 sz = tuple(sz)
                 noise = torch.cat((torch.normal(0, sigma, sz), torch.zeros(sz)), dim=0)
+            elif self.include_weak_segmentation:
+                sz1 = np.asarray(x.size()); sz2 = np.asarray(x.size())
+                sz1[0] = sz1[0] // 3; sz2[0] = 2 * sz2[0] // 3
+                sz1 = tuple(sz1); sz2 = tuple(sz2)
+                noise = torch.cat((torch.normal(0, sigma, sz1), torch.zeros(sz2)), dim=0)
             else:
                 noise = torch.normal(0, sigma, x.size())
             if x.is_cuda:
@@ -289,7 +296,7 @@ class Rotate90(object):
 
 class RandomDeformation(object):
 
-    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False):
+    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False):
         """
         Apply random deformation to the inputs
         :param shape: shape of the inputs
@@ -298,6 +305,7 @@ class RandomDeformation(object):
         :param points: seed points for deformation
         :param sigma: standard deviation for deformation
         :param include_segmentation: 2nd half of the batch will not be augmented as this is assumed to be a segmentation
+        :param include_weak_segmentation: last 2/3 of the batch will not be augmented as this is assumed to be weak segmentation labels
         """
         self.shape = shape
         self.prob = prob
@@ -308,6 +316,7 @@ class RandomDeformation(object):
         self.sigma = sigma
         self.p = 10
         self.include_segmentation = include_segmentation
+        self.include_weak_segmentation = include_weak_segmentation
 
         i = np.linspace(-1, 1, shape[0])
         j = np.linspace(-1, 1, shape[1])
@@ -360,6 +369,8 @@ class RandomDeformation(object):
             x_aug = F.grid_sample(x, grid, padding_mode="border")
             if self.include_segmentation:
                 x_aug[x.size(0)//2:, ...] = x_aug[x.size(0)//2:, ...] > 0.5
+            elif self.include_weak_segmentation:
+                x_aug[x.size(0)//3:, ...] = x_aug[x.size(0)//3:, ...] > 0.5
             return x_aug
         else:
             return x
