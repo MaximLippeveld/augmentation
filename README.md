@@ -4,6 +4,9 @@ This code is an extension on the ["imgaug"](https://github.com/aleju/imgaug) pac
 
 ## Installation
 Install the dependencies and you are ready to go! 
-  `pip install -r requirements.txt`
+`pip install -r requirements.txt`
 
 ## Usage
+Import the required modules:
+<pre><code>import imageio
+import torch</code></pre>
