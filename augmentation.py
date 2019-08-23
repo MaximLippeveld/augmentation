@@ -29,13 +29,23 @@ class ToTensor(object):
 
 class ToFloatTensor(object):
 
+    def __init__(self, cuda=True):
+        """
+        Transforms a numpy array into a tensor
+        :param cuda: specifies whether the tensor should be transfered to the GPU or not
+        """
+        self.cuda = cuda
+
     def __call__(self, x):
         """
         Forward call
         :param x: input tensor
         :return: output tensor
         """
-        return x.float()
+        if self.cuda:
+            return x.float().cuda()
+        else:
+            return x.float()
 
 
 class ToLongTensor(object):
@@ -62,16 +72,18 @@ class AddChannelAxis(object):
 
 class AddNoise(object):
 
-    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0):
+    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False):
         """
         Adds noise to the input
         :param prob: probability of adding noise
         :param sigma_min: minimum noise standard deviation
         :param sigma_max: maximum noise standard deviation
+        :param include_segmentation: 2nd half of the batch will not be augmented as this is assumed to be a segmentation
         """
         self.prob = prob
         self.sigma_min = sigma_min
         self.sigma_max = sigma_max
+        self.include_segmentation = include_segmentation
 
     def __call__(self, x):
         """
@@ -82,7 +94,13 @@ class AddNoise(object):
 
         if rnd.rand() < self.prob:
             sigma = rnd.uniform(self.sigma_min, self.sigma_max)
-            noise = torch.normal(0, sigma, x.size())
+            if self.include_segmentation:
+                sz = np.asarray(x.size())
+                sz[0] = sz[0] // 2
+                sz = tuple(sz)
+                noise = torch.cat((torch.normal(0, sigma, sz), torch.zeros(sz)), dim=0)
+            else:
+                noise = torch.normal(0, sigma, x.size())
             if x.is_cuda:
                 noise = noise.cuda()
             return x + noise
@@ -123,13 +141,13 @@ class FlipX(object):
         self.prob = prob
         self.cuda = cuda
 
-        i = np.linspace(-1, 1, shape[2])
-        j = np.linspace(-1, 1, shape[3])
+        i = np.linspace(-1, 1, shape[0])
+        j = np.linspace(-1, 1, shape[1])
         xv, yv = np.meshgrid(i, j)
         xv = np.fliplr(xv).copy()
 
         grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
-        grid = grid.unsqueeze(0).repeat_interleave(shape[0], dim=0)
+        grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
         self.grid = grid
@@ -142,7 +160,8 @@ class FlipX(object):
         """
 
         if rnd.rand() < self.prob:
-            return F.grid_sample(x, self.grid)
+            grid = self.grid.repeat_interleave(x.size(0), dim=0)
+            return F.grid_sample(x, grid)
         else:
             return x
 
@@ -160,13 +179,13 @@ class FlipY(object):
         self.prob = prob
         self.cuda = cuda
 
-        i = np.linspace(-1, 1, shape[2])
-        j = np.linspace(-1, 1, shape[3])
+        i = np.linspace(-1, 1, shape[0])
+        j = np.linspace(-1, 1, shape[1])
         xv, yv = np.meshgrid(i, j)
         yv = np.flipud(yv).copy()
 
         grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
-        grid = grid.unsqueeze(0).repeat_interleave(shape[0], dim=0)
+        grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
         self.grid = grid
@@ -179,7 +198,8 @@ class FlipY(object):
         """
 
         if rnd.rand() < self.prob:
-            return F.grid_sample(x, self.grid)
+            grid = self.grid.repeat_interleave(x.size(0), dim=0)
+            return F.grid_sample(x, grid)
         else:
             return x
 
@@ -195,8 +215,8 @@ class Rotate90(object):
         self.prob = prob
         self.cuda = cuda
 
-        i = np.linspace(-1, 1, shape[2])
-        j = np.linspace(-1, 1, shape[3])
+        i = np.linspace(-1, 1, shape[0])
+        j = np.linspace(-1, 1, shape[1])
         grids = []
         for m in range(4):
             xv, yv = np.meshgrid(i, j)
@@ -204,7 +224,7 @@ class Rotate90(object):
             yv = np.rot90(yv, m+1).copy()
 
             grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
-            grid = grid.unsqueeze(0).repeat_interleave(shape[0], dim=0)
+            grid = grid.unsqueeze(0)
             if cuda:
                 grid = grid.cuda()
             grids.append(grid)
@@ -218,14 +238,15 @@ class Rotate90(object):
         """
 
         if rnd.rand() < self.prob:
-            return F.grid_sample(x, self.grids[rnd.randint(0, 4)])
+            grid = self.grids[rnd.randint(0, 4)].repeat_interleave(x.size(0), dim=0)
+            return F.grid_sample(x, grid)
         else:
             return x
 
 
 class RandomDeformation(object):
 
-    def __init__(self, shape, prob=1, cuda=True, points=64, sigma=0.001):
+    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False):
         """
         Apply random deformation to the inputs
         :param shape: shape of the inputs
@@ -237,16 +258,19 @@ class RandomDeformation(object):
         self.shape = shape
         self.prob = prob
         self.cuda = cuda
+        if points == None:
+            points = shape[0] // 64
         self.points = points
         self.sigma = sigma
         self.p = 10
+        self.include_segmentation = include_segmentation
 
-        i = np.linspace(-1, 1, shape[2])
-        j = np.linspace(-1, 1, shape[3])
+        i = np.linspace(-1, 1, shape[0])
+        j = np.linspace(-1, 1, shape[1])
         xv, yv = np.meshgrid(i, j)
 
         grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
-        grid = grid.unsqueeze(0).repeat_interleave(shape[0], dim=0)
+        grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
         self.grid = grid
@@ -267,9 +291,9 @@ class RandomDeformation(object):
             displacement = displacement_f
 
         # resample to proper size
-        displacement_f = np.zeros((self.shape[2], self.shape[3], 2))
+        displacement_f = np.zeros((self.shape[0], self.shape[1], 2))
         for d in range(0, displacement.ndim - 1):
-            displacement_f[:, :, d] = cv2.resize(displacement[:, :, d], dsize=self.shape[2:],
+            displacement_f[:, :, d] = cv2.resize(displacement[:, :, d], dsize=self.shape,
                                                  interpolation=cv2.INTER_CUBIC)
 
         displacement = torch.Tensor(displacement_f).unsqueeze(0)
@@ -286,8 +310,12 @@ class RandomDeformation(object):
         :return: output tensor
         """
 
-        grid = self._deformation_grid()
         if rnd.rand() < self.prob:
-            return F.grid_sample(x, grid, padding_mode="border")
+            grid = self._deformation_grid()
+            grid = grid.repeat_interleave(x.size(0), dim=0)
+            x_aug = F.grid_sample(x, grid, padding_mode="border")
+            if self.include_segmentation:
+                x_aug[x.size(0)//2:, ...] = x_aug[x.size(0)//2:, ...] > 0.5
+            return x_aug
         else:
             return x
