@@ -1,7 +1,7 @@
 import imageio
 import torch
 
-from augmentation import FlipX, FlipY, Rotate90, AddNoise, RandomDeformation
+from augmentation_2d import FlipX, FlipY, Rotate90, AddNoise, RandomDeformation
 
 x = imageio.imread('img/elaine.png').astype('float')
 shape = x.shape

@@ -254,12 +254,13 @@ class RandomDeformation(object):
         :param cuda: specifies whether the inputs are on the GPU
         :param points: seed points for deformation
         :param sigma: standard deviation for deformation
+        :param include_segmentation: 2nd half of the batch will not be augmented as this is assumed to be a segmentation
         """
         self.shape = shape
         self.prob = prob
         self.cuda = cuda
         if points == None:
-            points = shape[0] // 64
+            points = [shape[0] // 64, shape[1] // 64]
         self.points = points
         self.sigma = sigma
         self.p = 10
@@ -280,9 +281,8 @@ class RandomDeformation(object):
         Get a new random deformation grid
         :return: deformation tensor
         """
-        points = [self.points] * 2
         sigma = np.random.rand() * self.sigma
-        displacement = np.random.randn(*points, 2) * sigma
+        displacement = np.random.randn(*self.points, 2) * sigma
 
         # filter the displacement
         displacement_f = np.zeros_like(displacement)
