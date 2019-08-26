@@ -222,8 +222,8 @@ class Rotate90(object):
         self.prob = prob
         self.cuda = cuda
 
-        i = np.linspace(-1, 1, shape[1])
-        j = np.linspace(-1, 1, shape[2])
+        i = np.linspace(-1, 1, shape[0])
+        j = np.linspace(-1, 1, shape[1])
         grids = []
         for m in range(4):
             xv, yv = np.meshgrid(i, j)
