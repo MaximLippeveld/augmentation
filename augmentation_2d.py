@@ -90,8 +90,8 @@ class AddNoise(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor
-        :return: output tensor
+        :param x: input tensor (n, [c,] h, w)
+        :return: output tensor (n, [c,] h, w)
         """
 
         if rnd.rand() < self.prob:
@@ -140,7 +140,7 @@ class FlipX(object):
     def __init__(self, shape, prob=1, cuda=True):
         """
         Perform a flip along the X axis
-        :param shape: shape of the inputs
+        :param shape: shape of the input image (h, w)
         :param prob: probability of flipping
         :param cuda: specify whether the inputs are on the GPU
         """
@@ -162,7 +162,7 @@ class FlipX(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor
+        :param x: input tensor (n, [c,] h, w)
         :return: output tensor
         """
 
@@ -178,7 +178,7 @@ class FlipY(object):
     def __init__(self, shape, prob=1, cuda=True):
         """
         Perform a flip along the Y axis
-        :param shape: shape of the inputs
+        :param shape: shape of the input input image (h, w)
         :param prob: probability of flipping
         :param cuda: specify whether the inputs are on the GPU
         """
@@ -200,8 +200,8 @@ class FlipY(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor
-        :return: output tensor
+        :param x: input tensor (n, [c,] h, w)
+        :return: output tensor (n, [c,] h, w)
         """
 
         if rnd.rand() < self.prob:
@@ -240,8 +240,8 @@ class Rotate90(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor
-        :return: output tensor
+        :param x: input tensor (n, [c,] h, w)
+        :return: output tensor (n, [c,] h, w)
         """
 
         if rnd.rand() < self.prob:
@@ -256,7 +256,7 @@ class RandomDeformation(object):
     def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False):
         """
         Apply random deformation to the inputs
-        :param shape: shape of the inputs
+        :param shape: shape of the input image (h, w)
         :param prob: probability of deforming the data
         :param cuda: specifies whether the inputs are on the GPU
         :param points: seed points for deformation
@@ -315,8 +315,8 @@ class RandomDeformation(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor
-        :return: output tensor
+        :param x: input tensor (n, [c,] h, w)
+        :return: output tensor (n, [c,] h, w)
         """
 
         if rnd.rand() < self.prob:
