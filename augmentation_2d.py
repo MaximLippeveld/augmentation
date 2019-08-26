@@ -148,8 +148,8 @@ class FlipX(object):
         self.prob = prob
         self.cuda = cuda
 
-        i = np.linspace(-1, 1, shape[0])
-        j = np.linspace(-1, 1, shape[1])
+        i = np.linspace(-1, 1, shape[1])
+        j = np.linspace(-1, 1, shape[2])
         xv, yv = np.meshgrid(i, j)
         xv = np.fliplr(xv).copy()
 
@@ -186,8 +186,8 @@ class FlipY(object):
         self.prob = prob
         self.cuda = cuda
 
-        i = np.linspace(-1, 1, shape[0])
-        j = np.linspace(-1, 1, shape[1])
+        i = np.linspace(-1, 1, shape[1])
+        j = np.linspace(-1, 1, shape[2])
         xv, yv = np.meshgrid(i, j)
         yv = np.flipud(yv).copy()
 
@@ -268,15 +268,15 @@ class RandomDeformation(object):
         self.prob = prob
         self.cuda = cuda
         if points == None:
-            points = [shape[0] // 64, shape[1] // 64]
+            points = [shape[1] // 64, shape[2] // 64]
         self.points = points
         self.sigma = sigma
         self.p = 10
         self.include_segmentation = include_segmentation
         self.include_weak_segmentation = include_weak_segmentation
 
-        i = np.linspace(-1, 1, shape[0])
-        j = np.linspace(-1, 1, shape[1])
+        i = np.linspace(-1, 1, shape[1])
+        j = np.linspace(-1, 1, shape[2])
         xv, yv = np.meshgrid(i, j)
 
         grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
@@ -300,9 +300,9 @@ class RandomDeformation(object):
             displacement = displacement_f
 
         # resample to proper size
-        displacement_f = np.zeros((self.shape[0], self.shape[1], 2))
+        displacement_f = np.zeros((self.shape[1], self.shape[2], 2))
         for d in range(0, displacement.ndim - 1):
-            displacement_f[:, :, d] = cv2.resize(displacement[:, :, d], dsize=self.shape,
+            displacement_f[:, :, d] = cv2.resize(displacement[:, :, d], self.shape,
                                                  interpolation=cv2.INTER_CUBIC)
 
         displacement = torch.Tensor(displacement_f).unsqueeze(0)
