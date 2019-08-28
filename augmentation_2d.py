@@ -144,7 +144,7 @@ class FlipX(object):
         :param prob: probability of flipping
         :param cuda: specify whether the inputs are on the GPU
         """
-        self.shape = shape
+        self.shape = tuple(shape)
         self.prob = prob
         self.cuda = cuda
 
@@ -182,7 +182,7 @@ class FlipY(object):
         :param prob: probability of flipping
         :param cuda: specify whether the inputs are on the GPU
         """
-        self.shape = shape
+        self.shape = tuple(shape)
         self.prob = prob
         self.cuda = cuda
 
@@ -218,7 +218,7 @@ class Rotate90(object):
         Rotate the inputs by 90 degree angles
         :param prob: probability of rotating
         """
-        self.shape = shape
+        self.shape = tuple(shape)
         self.prob = prob
         self.cuda = cuda
 
@@ -310,11 +310,11 @@ class RandomDeformation(object):
         :param include_segmentation: 2nd half of the batch will not be augmented as this is assumed to be a segmentation
         :param include_weak_segmentation: last 2/3 of the batch will not be augmented as this is assumed to be weak segmentation labels
         """
-        self.shape = shape
+        self.shape = tuple(shape)
         self.prob = prob
         self.cuda = cuda
         if points == None:
-            points = [shape[0] // 64, shape[1] // 64]
+            points = [shape[0] // 16, shape[1] // 16]
         self.points = points
         self.sigma = sigma
         self.p = 10
