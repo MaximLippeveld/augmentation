@@ -251,6 +251,52 @@ class Rotate90(object):
             return x
 
 
+class RotateRandom(object):
+    
+    def __init__(self, shape, prob=1.0, range_=200, cuda=True):
+        """
+        Rotate the inputs by a random amount of degrees within interval.
+        :param shape: shape of the input image (h, w)
+        :param range_: random degree interval size (symmetric around 0)
+        :param cuda: specify wether the inputs are on the GPU.
+        """
+        self.shape = tuple(shape)
+        self.cuda = cuda
+        self.range = int(range_/2)
+        self.prob = prob
+        self.image_center = int(self.shape[0]/2), int(self.shape[1]/2)
+        
+        i = np.linspace(-1, 1, shape[0])
+        j = np.linspace(-1, 1, shape[1])
+        self.xv, self.yv = np.meshgrid(i, j)
+
+    def _rotation_grid(self):
+        angle = np.random.randint(-self.range, self.range)
+        rot_matrix = cv2.getRotationMatrix2D(self.image_center, angle, 1.0)
+        xv = cv2.warpAffine(self.xv, rot_matrix, self.xv.shape[1::-1], flags=cv2.INTER_CUBIC, borderValue=2)
+        yv = cv2.warpAffine(self.yv, rot_matrix, self.yv.shape[1::-1], flags=cv2.INTER_CUBIC, borderValue=2)
+
+        grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
+        grid = grid.unsqueeze(0)
+        if self.cuda:
+            grid = grid.cuda()
+        return grid
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor (n, [c,] h, w)
+        :return: output tensor (n, [c,] h, w)
+        """
+
+        if rnd.rand() < self.prob:
+            grid = self._rotation_grid()
+            grid = grid.repeat_interleave(x.size(0), dim=0)
+            return F.grid_sample(x, grid)
+        else:
+            return x
+
+
 class RandomDeformation(object):
 
     def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False, sampling_interval=64):
