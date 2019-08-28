@@ -299,7 +299,7 @@ class RotateRandom(object):
 
 class RandomDeformation(object):
 
-    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False):
+    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False, sampling_interval=64):
         """
         Apply random deformation to the inputs
         :param shape: shape of the input image (h, w)
@@ -309,12 +309,13 @@ class RandomDeformation(object):
         :param sigma: standard deviation for deformation
         :param include_segmentation: 2nd half of the batch will not be augmented as this is assumed to be a segmentation
         :param include_weak_segmentation: last 2/3 of the batch will not be augmented as this is assumed to be weak segmentation labels
+        :param sampling_interval: determine amount of points to be sampled for deformation
         """
         self.shape = tuple(shape)
         self.prob = prob
         self.cuda = cuda
         if points == None:
-            points = [shape[0] // 16, shape[1] // 16]
+            points = [shape[0] // sampling_interval, shape[1] // sampling_interval]
         self.points = points
         self.sigma = sigma
         self.p = 10
