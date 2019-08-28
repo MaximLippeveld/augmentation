@@ -260,7 +260,7 @@ class RotateRandom(object):
         :param range_: random degree interval size (symmetric around 0)
         :param cuda: specify wether the inputs are on the GPU.
         """
-        self.shape = shape
+        self.shape = tuple(shape)
         self.cuda = cuda
         self.range = int(range_/2)
         self.prob = prob
