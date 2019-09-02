@@ -6,6 +6,50 @@ import torch.nn.functional as F
 from scipy.ndimage import spline_filter1d
 
 
+class Stack(object):
+
+    def __init__(self, cuda=True):
+        """
+        Transforms a list of tensors into a tensor
+        :param cuda: specifies whether the tensor should be transfered to the GPU or not
+        """
+        self.cuda = cuda
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor
+        :return: output tensor
+        """
+        if self.cuda:
+            return torch.stack(x).cuda()
+        else:
+            return torch.stack(x)
+
+
+class Unsqueeze(object):
+
+    def __init__(self, cuda=True, dim=1):
+        """
+        Insert an extra dimension into a tensor
+        :param cuda: specifies whether the tensor should be transfered to the GPU or not
+        :param dim: specifies where dimension should be inserted
+        """
+        self.cuda = cuda
+        self.dim = dim
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor
+        :return: output tensor
+        """
+        if self.cuda:
+            return torch.unsqueeze(x, self.dim).cuda()
+        else:
+            return torch.unsqueeze(x, self.dim)
+
+
 class ToTensor(object):
 
     def __init__(self, cuda=True):
@@ -162,7 +206,7 @@ class FlipX(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor (n, [c,] h, w)
+        :param x: input tensor (n, c, h, w)
         :return: output tensor
         """
 
@@ -200,8 +244,8 @@ class FlipY(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor (n, [c,] h, w)
-        :return: output tensor (n, [c,] h, w)
+        :param x: input tensor (n, c, h, w)
+        :return: output tensor (n, c, h, w)
         """
 
         if rnd.rand() < self.prob:
@@ -240,8 +284,8 @@ class Rotate90(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor (n, [c,] h, w)
-        :return: output tensor (n, [c,] h, w)
+        :param x: input tensor (n, c, h, w)
+        :return: output tensor (n, c, h, w)
         """
 
         if rnd.rand() < self.prob:
@@ -285,8 +329,8 @@ class RotateRandom(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor (n, [c,] h, w)
-        :return: output tensor (n, [c,] h, w)
+        :param x: input tensor (n, c, h, w)
+        :return: output tensor (n, c, h, w)
         """
 
         if rnd.rand() < self.prob:
@@ -362,8 +406,8 @@ class RandomDeformation(object):
     def __call__(self, x):
         """
         Forward call
-        :param x: input tensor (n, [c,] h, w)
-        :return: output tensor (n, [c,] h, w)
+        :param x: input tensor (n, c, h, w) 
+        :return: output tensor (n, c, h, w)
         """
 
         if rnd.rand() < self.prob:
