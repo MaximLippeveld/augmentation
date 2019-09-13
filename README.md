@@ -28,7 +28,7 @@ y = flipy(x)</code></pre>
 Rotate the image 90 degrees: 
 <pre><code>rotate = Rotate90(shape)
 y = rotate(x)</code></pre>
-<img src="https://github.com/JorisRoels/augmentation/blob/master/img/elaine_rot.png" width="256" height="256">
+<img src="https://github.com/JorisRoels/augmentation/blob/master/img/elaine_rot90.png" width="256" height="256">
 
 Rotate the image randomly: 
 <pre><code>rotate = RotateRandom(shape)
