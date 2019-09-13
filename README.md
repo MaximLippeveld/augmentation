@@ -7,4 +7,4 @@ Install the dependencies and you are ready to go!
 <pre><code>pip install augmentation</code></pre>
 
 ## Usage
-Check out the provided [notebook examples](notebooks)! 
+Check out the provided [notebook examples](https://github.com/JorisRoels/augmentation/tree/master/notebooks)! 
