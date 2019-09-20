@@ -27,29 +27,6 @@ class Stack(object):
             return torch.stack(x)
 
 
-class Unsqueeze(object):
-
-    def __init__(self, cuda=True, dim=1):
-        """
-        Insert an extra dimension into a tensor
-        :param cuda: specifies whether the tensor should be transfered to the GPU or not
-        :param dim: specifies where dimension should be inserted
-        """
-        self.cuda = cuda
-        self.dim = dim
-
-    def __call__(self, x):
-        """
-        Forward call
-        :param x: input tensor
-        :return: output tensor
-        """
-        if self.cuda:
-            return torch.unsqueeze(x, self.dim).cuda()
-        else:
-            return torch.unsqueeze(x, self.dim)
-
-
 class ToTensor(object):
 
     def __init__(self, cuda=True):
