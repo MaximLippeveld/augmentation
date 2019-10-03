@@ -161,10 +161,10 @@ class RandomCrop(object):
 
 class Scale(object):
 
-    def __init__(self, scale_factor=1, mode='bilinear'):
+    def __init__(self, scale_factor=(0.5, 1.5), mode='bilinear'):
         """
-        Scales the input by a specific factor
-        :param scale_factor: scaling factor
+        Scales the input by a specific factor (randomly selected from a minimum-maximum range)
+        :param scale_factor: minimum and maximum scaling factor
         """
         self.scale_factor = scale_factor
         self.mode = mode
@@ -175,7 +175,11 @@ class Scale(object):
         :param x: input tensor
         :return: output tensor
         """
-        return F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode, align_corners=False)
+        if type(self.scale_factor) == tuple:
+            scale_factor = (self.scale_factor[1] - self.scale_factor[0]) * np.random.random_sample() + self.scale_factor[0]
+        else:
+            scale_factor = self.scale_factor
+        return F.interpolate(x, scale_factor=scale_factor, mode=self.mode, align_corners=False)
 
 
 class FlipX(object):
