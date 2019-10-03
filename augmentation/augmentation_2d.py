@@ -72,7 +72,8 @@ class AddChannelAxis(object):
 
 class AddNoise(object):
 
-    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False, include_weak_segmentation=False):
+    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False,
+                 include_weak_segmentation=False):
         """
         Adds noise to the input
         :param prob: probability of adding noise
@@ -102,9 +103,12 @@ class AddNoise(object):
                 sz = tuple(sz)
                 noise = torch.cat((torch.normal(0, sigma, sz), torch.zeros(sz)), dim=0)
             elif self.include_weak_segmentation:
-                sz1 = np.asarray(x.size()); sz2 = np.asarray(x.size())
-                sz1[0] = sz1[0] // 3; sz2[0] = 2 * sz2[0] // 3
-                sz1 = tuple(sz1); sz2 = tuple(sz2)
+                sz1 = np.asarray(x.size());
+                sz2 = np.asarray(x.size())
+                sz1[0] = sz1[0] // 3;
+                sz2[0] = 2 * sz2[0] // 3
+                sz1 = tuple(sz1);
+                sz2 = tuple(sz2)
                 noise = torch.cat((torch.normal(0, sigma, sz1), torch.zeros(sz2)), dim=0)
             else:
                 noise = torch.normal(0, sigma, x.size())
@@ -133,6 +137,45 @@ class Normalize(object):
         :return: output tensor
         """
         return (x - self.mu) / self.std
+
+
+class RandomCrop(object):
+
+    def __init__(self, crop_shape):
+        """
+        Selects a random crop from the input
+        :param crop_shape: shape of the crop
+        """
+        self.crop_shape = crop_shape
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor
+        :return: output tensor
+        """
+        r = np.random.randint(0, x.size(2) - self.crop_shape[0] + 1)
+        c = np.random.randint(0, x.size(3) - self.crop_shape[1] + 1)
+        return x[:, :, r:r + self.crop_shape[0], c:c + self.crop_shape[1]]
+
+
+class Scale(object):
+
+    def __init__(self, scale_factor=1, mode='bilinear'):
+        """
+        Scales the input by a specific factor
+        :param scale_factor: scaling factor
+        """
+        self.scale_factor = scale_factor
+        self.mode = mode
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor
+        :return: output tensor
+        """
+        return F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode, align_corners=False)
 
 
 class FlipX(object):
@@ -227,8 +270,8 @@ class Rotate90(object):
         grids = []
         for m in range(4):
             xv, yv = np.meshgrid(i, j)
-            xv = np.rot90(xv, m+1).copy()
-            yv = np.rot90(yv, m+1).copy()
+            xv = np.rot90(xv, m + 1).copy()
+            yv = np.rot90(yv, m + 1).copy()
 
             grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1)), dim=-1)
             grid = grid.unsqueeze(0)
@@ -252,7 +295,7 @@ class Rotate90(object):
 
 
 class RotateRandom(object):
-    
+
     def __init__(self, shape, prob=1.0, range_=200, cuda=True):
         """
         Rotate the inputs by a random amount of degrees within interval.
@@ -262,10 +305,10 @@ class RotateRandom(object):
         """
         self.shape = tuple(shape)
         self.cuda = cuda
-        self.range = int(range_/2)
+        self.range = int(range_ / 2)
         self.prob = prob
-        self.image_center = int(self.shape[0]/2), int(self.shape[1]/2)
-        
+        self.image_center = int(self.shape[0] / 2), int(self.shape[1] / 2)
+
         i = np.linspace(-1, 1, shape[0])
         j = np.linspace(-1, 1, shape[1])
         self.xv, self.yv = np.meshgrid(i, j)
@@ -299,7 +342,8 @@ class RotateRandom(object):
 
 class RandomDeformation(object):
 
-    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False, sampling_interval=64):
+    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False,
+                 include_weak_segmentation=False, sampling_interval=64):
         """
         Apply random deformation to the inputs
         :param shape: shape of the input image (h, w)
@@ -371,9 +415,9 @@ class RandomDeformation(object):
             grid = grid.repeat_interleave(x.size(0), dim=0)
             x_aug = F.grid_sample(x, grid, padding_mode="border")
             if self.include_segmentation:
-                x_aug[x.size(0)//2:, ...] = x_aug[x.size(0)//2:, ...] > 0.5
+                x_aug[x.size(0) // 2:, ...] = x_aug[x.size(0) // 2:, ...] > 0.5
             elif self.include_weak_segmentation:
-                x_aug[x.size(0)//3:, ...] = x_aug[x.size(0)//3:, ...] > 0.5
+                x_aug[x.size(0) // 3:, ...] = x_aug[x.size(0) // 3:, ...] > 0.5
             return x_aug
         else:
             return x

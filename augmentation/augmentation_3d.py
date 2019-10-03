@@ -72,7 +72,8 @@ class AddChannelAxis(object):
 
 class AddNoise(object):
 
-    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False, include_weak_segmentation=False):
+    def __init__(self, prob=0.5, sigma_min=0.0, sigma_max=1.0, include_segmentation=False,
+                 include_weak_segmentation=False):
         """
         Adds noise to the input
         :param prob: probability of adding noise
@@ -102,9 +103,12 @@ class AddNoise(object):
                 sz = tuple(sz)
                 noise = torch.cat((torch.normal(0, sigma, sz), torch.zeros(sz)), dim=0)
             elif self.include_weak_segmentation:
-                sz1 = np.asarray(x.size()); sz2 = np.asarray(x.size())
-                sz1[0] = sz1[0] // 3; sz2[0] = 2 * sz2[0] // 3
-                sz1 = tuple(sz1); sz2 = tuple(sz2)
+                sz1 = np.asarray(x.size());
+                sz2 = np.asarray(x.size())
+                sz1[0] = sz1[0] // 3;
+                sz2[0] = 2 * sz2[0] // 3
+                sz1 = tuple(sz1);
+                sz2 = tuple(sz2)
                 noise = torch.cat((torch.normal(0, sigma, sz1), torch.zeros(sz2)), dim=0)
             else:
                 noise = torch.normal(0, sigma, x.size())
@@ -135,6 +139,46 @@ class Normalize(object):
         return (x - self.mu) / self.std
 
 
+class RandomCrop(object):
+
+    def __init__(self, crop_shape):
+        """
+        Selects a random crop from the input
+        :param crop_shape: shape of the crop
+        """
+        self.crop_shape = crop_shape
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor
+        :return: output tensor
+        """
+        r = np.random.randint(0, x.size(2) - self.crop_shape[0] + 1)
+        c = np.random.randint(0, x.size(3) - self.crop_shape[1] + 1)
+        z = np.random.randint(0, x.size(4) - self.crop_shape[2] + 1)
+        return x[:, :, r:r + self.crop_shape[0], c:c + self.crop_shape[1], z:z + self.crop_shape[2]]
+
+
+class Scale(object):
+
+    def __init__(self, scale_factor=1, mode='bilinear'):
+        """
+        Scales the input by a specific factor
+        :param scale_factor: scaling factor
+        """
+        self.scale_factor = scale_factor
+        self.mode = mode
+
+    def __call__(self, x):
+        """
+        Forward call
+        :param x: input tensor
+        :return: output tensor
+        """
+        return F.interpolate(x, scale_factor=self.scale_factor, mode=self.mode, align_corners=False)
+
+
 class FlipX(object):
 
     def __init__(self, shape, prob=1, cuda=True):
@@ -154,7 +198,8 @@ class FlipX(object):
         xv, yv, zv = np.meshgrid(i, j, k)
         xv = np.fliplr(xv).copy()
 
-        grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
+        grid = torch.cat(
+            (torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
         grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
@@ -193,7 +238,8 @@ class FlipY(object):
         xv, yv, zv = np.meshgrid(i, j, k)
         yv = np.flipud(yv).copy()
 
-        grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
+        grid = torch.cat(
+            (torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
         grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
@@ -232,7 +278,8 @@ class FlipZ(object):
         xv, yv, zv = np.meshgrid(i, j, k)
         zv = zv[:, :, ::-1].copy()
 
-        grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
+        grid = torch.cat(
+            (torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
         grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
@@ -269,11 +316,13 @@ class Rotate90(object):
         grids = []
         for m in range(4):
             xv, yv, zv = np.meshgrid(i, j, k)
-            xv = np.rot90(xv, m+1).copy()
-            yv = np.rot90(yv, m+1).copy()
-            zv = np.rot90(zv, m+1).copy()
+            xv = np.rot90(xv, m + 1).copy()
+            yv = np.rot90(yv, m + 1).copy()
+            zv = np.rot90(zv, m + 1).copy()
 
-            grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
+            grid = torch.cat(
+                (torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)),
+                dim=-1)
             grid = grid.unsqueeze(0)
             if cuda:
                 grid = grid.cuda()
@@ -296,7 +345,8 @@ class Rotate90(object):
 
 class RandomDeformation(object):
 
-    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False, include_weak_segmentation=False):
+    def __init__(self, shape, prob=1, cuda=True, points=None, sigma=0.01, include_segmentation=False,
+                 include_weak_segmentation=False):
         """
         Apply random deformation to the inputs
         :param shape: shape of the inputs
@@ -323,7 +373,8 @@ class RandomDeformation(object):
         k = np.linspace(-1, 1, shape[2])
         xv, yv, zv = np.meshgrid(i, j, k)
 
-        grid = torch.cat((torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
+        grid = torch.cat(
+            (torch.Tensor(xv).unsqueeze(-1), torch.Tensor(yv).unsqueeze(-1), torch.Tensor(zv).unsqueeze(-1)), dim=-1)
         grid = grid.unsqueeze(0)
         if cuda:
             grid = grid.cuda()
@@ -347,7 +398,7 @@ class RandomDeformation(object):
         displacement_f = np.zeros((self.shape[0], self.shape[1], self.shape[2], 2))
         for d in range(0, displacement.ndim - 1):
             displacement_f[:, :, :, d] = cv2.resize(displacement[:, :, :, d], dsize=self.shape,
-                                                 interpolation=cv2.INTER_CUBIC)
+                                                    interpolation=cv2.INTER_CUBIC)
 
         displacement = torch.Tensor(displacement_f).unsqueeze(0)
         if self.cuda:
@@ -368,9 +419,9 @@ class RandomDeformation(object):
             grid = grid.repeat_interleave(x.size(0), dim=0)
             x_aug = F.grid_sample(x, grid, padding_mode="border")
             if self.include_segmentation:
-                x_aug[x.size(0)//2:, ...] = x_aug[x.size(0)//2:, ...] > 0.5
+                x_aug[x.size(0) // 2:, ...] = x_aug[x.size(0) // 2:, ...] > 0.5
             elif self.include_weak_segmentation:
-                x_aug[x.size(0)//3:, ...] = x_aug[x.size(0)//3:, ...] > 0.5
+                x_aug[x.size(0) // 3:, ...] = x_aug[x.size(0) // 3:, ...] > 0.5
             return x_aug
         else:
             return x

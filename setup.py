@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="augmentation",
-    version="0.5",
+    version="0.6",
     author="Joris Roels",
     author_email="jorisb.roels@ugent.be",
     description="A library, based on PyTorch, that performs data augmentation on the GPU",
